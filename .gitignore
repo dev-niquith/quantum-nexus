@@ -1,27 +1,34 @@
 # Python
 __pycache__/
-*.py[cod]
+*.pyc
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Conda
+.env
+.conda
 
 # Jupyter
 .ipynb_checkpoints/
 
-# Environment
-.env
-.venv/
-venv/
-
 # Models
-*.pt
-*.pth
-*.pkl
-models/trained/
+models/trained/*.pkl
 
-# Data
-datasets/raw/
+# Generated Reports
+*.pdf
 
-# VS Code
+# Streamlit
+.streamlit/
+
+# VSCode
 .vscode/
 
-# OS files
+# Pytest
+.pytest_cache/
+
+# OS
 .DS_Store
 Thumbs.db
