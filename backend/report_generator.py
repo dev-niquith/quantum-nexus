@@ -11,6 +11,11 @@ from reportlab.lib.styles import (
     getSampleStyleSheet,
 )
 
+from reportlab.platypus import Image
+
+from backend.molecule_visualizer import (
+    generate_molecule_image
+)
 
 def generate_report(
     result,
@@ -115,5 +120,31 @@ def generate_report(
             styles["Normal"]
         )
     )
+
+    molecule_image = generate_molecule_image(
+        result["smiles"]
+    )
+
+    if molecule_image:
+
+        elements.append(
+            Spacer(1, 12)
+        )
+
+        elements.append(
+            Paragraph(
+                "Molecular Structure",
+                styles["Heading2"]
+            )
+        )
+
+        elements.append(
+            Image(
+                molecule_image,
+                width=250,
+                height=180
+            )
+        )
+
 
     doc.build(elements)

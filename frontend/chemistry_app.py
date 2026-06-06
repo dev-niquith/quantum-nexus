@@ -11,6 +11,15 @@ sys.path.append(str(ROOT))
 
 from backend.predict import predict_smiles
 
+from backend.molecule_lookup import (
+    get_molecule_info,
+    get_molecule_from_smiles
+)
+
+from backend.molecule_visualizer import (
+    generate_molecule_image
+)
+
 
 # ----------------------------
 # Load Metrics
@@ -50,21 +59,78 @@ st.subheader(
     "Chemistry Intelligence Engine"
 )
 
-smiles = st.text_input(
-    "Enter SMILES String"
+#smiles = st.text_input(
+    #"Enter SMILES String"
+#)
+
+search_type = st.radio(
+    "Search Method",
+    [
+        "Molecule Name",
+        "SMILES"
+    ]
 )
 
+molecule_name = ""
+smiles = ""
+
+if search_type == "Molecule Name":
+
+    molecule_name = st.text_input(
+        "Enter Molecule Name"
+    )
+
+else:
+
+    smiles = st.text_input(
+        "Enter SMILES String"
+    )
 
 
 
+if st.button("Analyze Molecule"):
 
-if st.button(
-    "Analyze Molecule"
-):
+    molecule_metadata = None
+
+    if search_type == "Molecule Name":
+
+        molecule_metadata = get_molecule_info(
+            molecule_name
+        )
+
+        if molecule_metadata is None:
+
+            st.error(
+                "Molecule not found."
+            )
+
+            st.stop()
+
+        smiles = molecule_metadata[
+            "smiles"
+        ]
+
+    else:
+
+        molecule_metadata = (
+            get_molecule_from_smiles(
+                smiles
+            )
+        )
 
     result = predict_smiles(
         smiles
     )
+
+    st.session_state[
+        "result"
+    ] = result
+
+    st.session_state[
+        "metadata"
+    ] = molecule_metadata
+
+
 
     st.session_state["result"] = result
 
@@ -73,9 +139,117 @@ if st.button(
 
         result = st.session_state["result"]
 
+        metadata = st.session_state.get(
+            "metadata"
+        )
+
+        if metadata:
+
+            st.subheader(
+                "Molecule Information"
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                st.metric(
+                    "Formula",
+                    metadata["formula"]
+                )
+
+            with col2:
+
+                st.metric(
+                    "Molecular Weight",
+                    round(
+                        float(
+                            metadata[
+                                "molecular_weight"
+                            ]
+                        ),
+                        2
+                    )
+                )
+
+            st.write(
+                f"**Name:** "
+                f"{metadata['name']}"
+            )
+
+            st.code(
+                metadata["smiles"]
+            )
+
+
+
+
+
+
+
         if "error" not in result:
 
             st.success("Analysis Complete")
+
+            
+            
+            if molecule_metadata:
+
+                st.subheader(
+                    "Molecule Information"
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+
+                    st.metric(
+                        "Molecular Weight",
+                        round(
+                            molecule_metadata[
+                                "molecular_weight"
+                            ],
+                            2
+                        )
+                    )
+
+                with col2:
+
+                    st.metric(
+                        "Formula",
+                        molecule_metadata[
+                            "formula"
+                        ]
+                    )
+
+                st.write(
+                    f"**Name:** "
+                    f"{molecule_metadata['name']}"
+                )
+
+            image = generate_molecule_image(
+                result["smiles"]
+            )
+
+            if image:
+
+                st.subheader(
+                    "2D Molecular Structure"
+                )
+
+                st.image(
+                    image,
+                    width = "stretch"
+                )
+
+            
+
+
+
+
+
+
+
 
             st.metric(
                 "Predicted Solubility",
@@ -176,3 +350,5 @@ if "result" in st.session_state:
             file_name="Quantum_Nexus_Report.pdf",
             mime="application/pdf"
         )
+
+
